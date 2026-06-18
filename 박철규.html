@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>박철규 기말고사 제출 링크</title>
+  <style>
+    :root {
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --teal: #0f766e;
+      --amber: #f59e0b;
+      --coral: #ef4444;
+      --soft: #f8fafc;
+      font-family: Inter, "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.14), transparent 35%),
+        linear-gradient(315deg, rgba(245, 158, 11, 0.18), transparent 30%),
+        #ffffff;
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    main {
+      width: min(1040px, 100%);
+      min-height: min(620px, calc(100vh - 56px));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 28px 70px rgba(17, 24, 39, 0.12);
+      padding: clamp(26px, 5vw, 58px);
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: clamp(28px, 5vw, 72px);
+      align-items: center;
+    }
+
+    .identity {
+      border-left: 7px solid var(--teal);
+      padding-left: clamp(20px, 3vw, 34px);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(38px, 7vw, 84px);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: clamp(16px, 2vw, 22px);
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .student {
+      display: grid;
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .student-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 12px;
+      font-size: clamp(15px, 1.8vw, 18px);
+    }
+
+    .label {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .value {
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .links {
+      display: grid;
+      gap: 18px;
+    }
+
+    .link-card {
+      display: grid;
+      gap: 10px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      text-decoration: none;
+      color: var(--ink);
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .link-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(15, 118, 110, 0.48);
+      box-shadow: 0 18px 34px rgba(15, 118, 110, 0.12);
+    }
+
+    .link-card strong {
+      font-size: clamp(21px, 3vw, 30px);
+      line-height: 1.2;
+    }
+
+    .link-card span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .repo {
+      border-top: 6px solid var(--teal);
+    }
+
+    .pages {
+      border-top: 6px solid var(--amber);
+    }
+
+    @media (max-width: 820px) {
+      body {
+        padding: 14px;
+      }
+
+      main {
+        min-height: auto;
+        grid-template-columns: 1fr;
+      }
+
+      .student-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .value {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="identity" aria-labelledby="title">
+      <h1 id="title">기말고사<br>제출 링크</h1>
+      <p class="subtitle">경영 경제 소프트웨어 프로그래밍, 2026</p>
+      <div class="student">
+        <div class="student-row">
+          <span class="label">학과</span>
+          <span class="value">경영학부</span>
+        </div>
+        <div class="student-row">
+          <span class="label">학번</span>
+          <span class="value">20202568</span>
+        </div>
+        <div class="student-row">
+          <span class="label">이름</span>
+          <span class="value">박철규</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="links" aria-label="제출 링크">
+      <a class="link-card repo" href="https://github.com/Box5789/ggesw-final-2026" target="_blank" rel="noopener">
+        <strong>GitHub Repository</strong>
+        <span>https://github.com/Box5789/ggesw-final-2026</span>
+      </a>
+      <a class="link-card pages" href="https://Box5789.github.io/ggesw-final-2026/" target="_blank" rel="noopener">
+        <strong>GitHub Pages</strong>
+        <span>https://Box5789.github.io/ggesw-final-2026/</span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>이미지 크롭 | 박철규</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --soft: #f8fafc;
+      --teal: #0f766e;
+      --teal-dark: #115e59;
+      --amber: #f59e0b;
+      --amber-soft: #fef3c7;
+      --coral: #ef4444;
+      --shadow: 0 18px 44px rgba(17, 24, 39, 0.08);
+      font-family: Inter, "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        linear-gradient(135deg, rgba(245, 158, 11, 0.16), transparent 32%),
+        linear-gradient(315deg, rgba(15, 118, 110, 0.08), transparent 26%),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    .button,
+    .file-button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 14px;
+      background: #ffffff;
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    button:hover,
+    .button:hover,
+    .file-button:hover {
+      border-color: rgba(245, 158, 11, 0.58);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      transform: none;
+    }
+
+    .primary {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #111827;
+      box-shadow: 0 12px 22px rgba(245, 158, 11, 0.2);
+    }
+
+    .toolbar {
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--amber), #fbbf24);
+      color: #111827;
+      font-weight: 900;
+      box-shadow: 0 14px 28px rgba(245, 158, 11, 0.24);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .editor {
+      display: grid;
+      grid-template-columns: 252px minmax(420px, 1fr) 320px;
+      gap: 18px;
+      padding: 18px;
+      min-height: calc(100vh - 70px);
+    }
+
+    .panel,
+    .workspace {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .panel {
+      padding: 16px;
+      align-self: start;
+      position: sticky;
+      top: 88px;
+      max-height: calc(100vh - 106px);
+      overflow: auto;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .panel-title h2 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .count {
+      min-width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--amber-soft);
+      color: #92400e;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .drop-zone {
+      border: 1.5px dashed rgba(245, 158, 11, 0.58);
+      border-radius: 8px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(254, 243, 199, 0.62), rgba(255, 255, 255, 0.9));
+      text-align: center;
+      color: #92400e;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .drop-zone.dragging {
+      border-color: var(--teal);
+      background: #f0fdfa;
+      color: var(--teal-dark);
+    }
+
+    .drop-zone strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .drop-zone span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .source-item {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--amber);
+      border-radius: 8px;
+      padding: 10px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .source-item.active {
+      border-color: rgba(245, 158, 11, 0.68);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16);
+    }
+
+    .source-name {
+      font-size: 13px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+      line-height: 1.35;
+    }
+
+    .source-meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto minmax(460px, 1fr) auto;
+      min-height: 640px;
+      overflow: hidden;
+    }
+
+    .workspace-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(15, 118, 110, 0.08));
+    }
+
+    .workspace-head h2 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      min-height: 460px;
+      background:
+        linear-gradient(#ffffff 0 0) padding-box,
+        repeating-linear-gradient(45deg, rgba(17, 24, 39, 0.04) 0 1px, transparent 1px 12px);
+      padding: 18px;
+    }
+
+    #editorCanvas {
+      width: 100%;
+      height: 100%;
+      min-height: 440px;
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      touch-action: none;
+    }
+
+    .control-strip {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 14px;
+      align-items: center;
+      padding: 15px 18px;
+      border-top: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .segmented {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .segment {
+      min-height: 34px;
+      padding: 0 12px;
+      font-size: 13px;
+      border-color: rgba(17, 24, 39, 0.12);
+    }
+
+    .segment.active {
+      background: #111827;
+      border-color: #111827;
+      color: #ffffff;
+    }
+
+    .select-row,
+    .range-row {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    label.small-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    select,
+    input[type="range"] {
+      width: 100%;
+    }
+
+    select {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .preview-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f9fafb;
+      min-height: 196px;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .preview-box img {
+      max-width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #ffffff;
+      box-shadow: 0 12px 24px rgba(17, 24, 39, 0.08);
+    }
+
+    .preview-empty {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .stats {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .stat-value {
+      font-size: 15px;
+      font-weight: 900;
+      color: #92400e;
+      text-align: right;
+    }
+
+    .action-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1120px) {
+      .editor {
+        grid-template-columns: 230px minmax(340px, 1fr);
+      }
+
+      .panel.inspector {
+        grid-column: 1 / -1;
+        position: static;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .toolbar {
+        height: auto;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px;
+      }
+
+      .toolbar-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .toolbar-actions > * {
+        flex: 1 1 150px;
+      }
+
+      .editor {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      .panel {
+        position: static;
+        max-height: none;
+      }
+
+      .workspace {
+        min-height: 580px;
+      }
+
+      .workspace-head,
+      .control-strip {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .workspace-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .status {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="brand">
+      <div class="brand-mark">IMG</div>
+      <div>
+        <h1>이미지 크롭</h1>
+        <p>박철규 · JPG/PNG 이미지를 원하는 비율로 잘라 새 이미지로 저장</p>
+      </div>
+    </div>
+    <div class="toolbar-actions">
+      <a class="button" href="index.html">PDF 페이지 정리</a>
+      <a class="button" href="박철규.html" target="_blank" rel="noopener">제출 링크</a>
+      <label class="file-button" for="imageInput">이미지 추가</label>
+      <button class="primary" id="downloadTop" type="button" disabled>크롭 이미지 다운로드</button>
+    </div>
+  </header>
+
+  <main class="editor">
+    <aside class="panel">
+      <div class="panel-title">
+        <h2>소스 이미지</h2>
+        <span class="count" id="imageCount">0</span>
+      </div>
+      <div class="drop-zone" id="dropZone">
+        <strong>이미지 파일 넣기</strong>
+        <span>JPG, PNG, WebP 파일을 선택하거나 여기로 끌어오세요.</span>
+        <label class="file-button" for="imageInput">파일 선택</label>
+        <input id="imageInput" class="hidden" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+      </div>
+      <div class="source-list" id="imageList"></div>
+      <p class="hint">이미지를 선택한 뒤 가운데 작업판에서 크롭 영역을 이동하거나 모서리를 끌어 크기를 조절하세요.</p>
+    </aside>
+
+    <section class="workspace" aria-label="이미지 크롭 작업판">
+      <div class="workspace-head">
+        <div>
+          <h2>크롭 작업판</h2>
+        </div>
+        <div class="status" id="status">이미지를 추가하면 크롭 영역이 표시됩니다.</div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="editorCanvas" aria-label="이미지 크롭 캔버스"></canvas>
+      </div>
+      <div class="control-strip">
+        <div>
+          <label class="small-label">가로세로 비율</label>
+          <div class="segmented" id="ratioButtons">
+            <button class="segment active" type="button" data-ratio="">Free</button>
+            <button class="segment" type="button" data-ratio="1">1:1</button>
+            <button class="segment" type="button" data-ratio="1.3333333333">4:3</button>
+            <button class="segment" type="button" data-ratio="1.7777777778">16:9</button>
+            <button class="segment" type="button" data-ratio="0.75">3:4</button>
+          </div>
+        </div>
+        <button id="resetCrop" type="button" disabled>크롭 리셋</button>
+        <button class="primary" id="downloadStrip" type="button" disabled>다운로드</button>
+      </div>
+    </section>
+
+    <aside class="panel inspector">
+      <div class="panel-title">
+        <h2>미리보기</h2>
+        <span class="count" id="qualityBadge">92</span>
+      </div>
+      <div class="preview-box">
+        <div class="preview-empty" id="previewEmpty">크롭 결과가 여기에 표시됩니다.</div>
+        <img class="hidden" id="previewImage" alt="크롭 결과 미리보기">
+      </div>
+      <div class="stats">
+        <div class="stat-row">
+          <span class="stat-label">원본 크기</span>
+          <span class="stat-value" id="sourceSize">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">출력 크기</span>
+          <span class="stat-value" id="outputSize">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">선택 비율</span>
+          <span class="stat-value" id="ratioValue">Free</span>
+        </div>
+      </div>
+      <div class="select-row">
+        <label class="small-label" for="formatSelect">출력 형식</label>
+        <select id="formatSelect">
+          <option value="image/png">PNG</option>
+          <option value="image/jpeg">JPEG</option>
+        </select>
+      </div>
+      <div class="range-row">
+        <label class="small-label" for="qualityRange">JPEG 품질</label>
+        <input id="qualityRange" type="range" min="50" max="100" value="92">
+      </div>
+      <div class="action-stack">
+        <button id="downloadSide" class="primary" type="button" disabled>크롭 이미지 다운로드</button>
+      </div>
+      <p class="hint">PNG는 투명도를 유지할 수 있고, JPEG는 품질 값에 따라 파일 크기가 달라집니다.</p>
+    </aside>
+  </main>
+
+  <script>
+    const state = {
+      images: [],
+      currentId: null,
+      ratio: null,
+      crop: null,
+      drag: null,
+      canvasSize: { width: 0, height: 0, dpr: 1 },
+      previewUrl: null,
+      previewTimer: null,
+    };
+
+    const els = {
+      input: document.getElementById("imageInput"),
+      dropZone: document.getElementById("dropZone"),
+      imageList: document.getElementById("imageList"),
+      imageCount: document.getElementById("imageCount"),
+      canvas: document.getElementById("editorCanvas"),
+      status: document.getElementById("status"),
+      ratioButtons: document.getElementById("ratioButtons"),
+      resetCrop: document.getElementById("resetCrop"),
+      downloadTop: document.getElementById("downloadTop"),
+      downloadStrip: document.getElementById("downloadStrip"),
+      downloadSide: document.getElementById("downloadSide"),
+      previewImage: document.getElementById("previewImage"),
+      previewEmpty: document.getElementById("previewEmpty"),
+      sourceSize: document.getElementById("sourceSize"),
+      outputSize: document.getElementById("outputSize"),
+      ratioValue: document.getElementById("ratioValue"),
+      formatSelect: document.getElementById("formatSelect"),
+      qualityRange: document.getElementById("qualityRange"),
+      qualityBadge: document.getElementById("qualityBadge"),
+    };
+
+    const ctx = els.canvas.getContext("2d");
+    const makeId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+
+    const currentItem = () => state.images.find((item) => item.id === state.currentId);
+    const currentImage = () => currentItem()?.image || null;
+
+    const setStatus = (message, tone = "normal") => {
+      els.status.textContent = message;
+      els.status.style.color = tone === "error" ? "#b91c1c" : tone === "success" ? "#92400e" : "#6b7280";
+    };
+
+    const loadFiles = async (fileList) => {
+      const files = Array.from(fileList).filter((file) => /^image\/(png|jpeg|webp)$/.test(file.type));
+      if (!files.length) {
+        setStatus("JPG, PNG, WebP 이미지만 추가할 수 있습니다.", "error");
+        return;
+      }
+
+      let firstNewId = null;
+      for (const file of files) {
+        try {
+          const item = await loadImageFile(file);
+          state.images.push(item);
+          firstNewId ||= item.id;
+        } catch (error) {
+          setStatus(`${file.name} 파일을 읽지 못했습니다.`, "error");
+        }
+      }
+
+      if (firstNewId) {
+        selectImage(firstNewId);
+        setStatus(`${files.length}개 이미지를 추가했습니다.`, "success");
+      }
+      els.input.value = "";
+      render();
+    };
+
+    const loadImageFile = (file) => new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        resolve({
+          id: makeId(),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url,
+          image,
+        });
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Image load failed"));
+      };
+      image.src = url;
+    });
+
+    const selectImage = (id) => {
+      state.currentId = id;
+      resetCropToRatio();
+      setStatus("크롭 영역을 이동하거나 크기를 조절하세요.", "success");
+      draw();
+      queuePreview();
+      render();
+    };
+
+    const setRatio = (value) => {
+      state.ratio = value ? Number(value) : null;
+      resetCropToRatio(true);
+      draw();
+      queuePreview();
+      render();
+    };
+
+    const ratioLabel = () => {
+      if (!state.ratio) return "Free";
+      if (Math.abs(state.ratio - 1) < 0.01) return "1:1";
+      if (Math.abs(state.ratio - 4 / 3) < 0.01) return "4:3";
+      if (Math.abs(state.ratio - 16 / 9) < 0.01) return "16:9";
+      if (Math.abs(state.ratio - 3 / 4) < 0.01) return "3:4";
+      return state.ratio.toFixed(2);
+    };
+
+    const resetCropToRatio = (keepCenter = false) => {
+      const image = currentImage();
+      if (!image) {
+        state.crop = null;
+        return;
+      }
+
+      const center = keepCenter && state.crop
+        ? { x: state.crop.x + state.crop.w / 2, y: state.crop.y + state.crop.h / 2 }
+        : { x: image.naturalWidth / 2, y: image.naturalHeight / 2 };
+
+      let width = image.naturalWidth * 0.78;
+      let height = image.naturalHeight * 0.78;
+      if (state.ratio) {
+        height = width / state.ratio;
+        if (height > image.naturalHeight * 0.78) {
+          height = image.naturalHeight * 0.78;
+          width = height * state.ratio;
+        }
+      }
+
+      state.crop = clampCrop({
+        x: center.x - width / 2,
+        y: center.y - height / 2,
+        w: width,
+        h: height,
+      }, state.ratio);
+    };
+
+    const resizeCanvas = () => {
+      const rect = els.canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      state.canvasSize = { width: rect.width, height: rect.height, dpr };
+      els.canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      els.canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    };
+
+    const getImageBox = () => {
+      const image = currentImage();
+      if (!image) return null;
+      const padding = 20;
+      const availableWidth = Math.max(1, state.canvasSize.width - padding * 2);
+      const availableHeight = Math.max(1, state.canvasSize.height - padding * 2);
+      const scale = Math.min(availableWidth / image.naturalWidth, availableHeight / image.naturalHeight);
+      const width = image.naturalWidth * scale;
+      const height = image.naturalHeight * scale;
+      return {
+        x: (state.canvasSize.width - width) / 2,
+        y: (state.canvasSize.height - height) / 2,
+        width,
+        height,
+        scale,
+      };
+    };
+
+    const imageToCanvasRect = (crop) => {
+      const box = getImageBox();
+      if (!box || !crop) return null;
+      return {
+        x: box.x + crop.x * box.scale,
+        y: box.y + crop.y * box.scale,
+        w: crop.w * box.scale,
+        h: crop.h * box.scale,
+      };
+    };
+
+    const canvasPointToImage = (clientX, clientY) => {
+      const image = currentImage();
+      const box = getImageBox();
+      const rect = els.canvas.getBoundingClientRect();
+      if (!image || !box) return null;
+      const x = (clientX - rect.left - box.x) / box.scale;
+      const y = (clientY - rect.top - box.y) / box.scale;
+      return {
+        x: Math.max(0, Math.min(image.naturalWidth, x)),
+        y: Math.max(0, Math.min(image.naturalHeight, y)),
+      };
+    };
+
+    const draw = () => {
+      ctx.setTransform(state.canvasSize.dpr, 0, 0, state.canvasSize.dpr, 0, 0);
+      ctx.clearRect(0, 0, state.canvasSize.width, state.canvasSize.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, state.canvasSize.width, state.canvasSize.height);
+
+      const image = currentImage();
+      if (!image) {
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "700 18px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("이미지를 추가하면 편집을 시작할 수 있습니다.", state.canvasSize.width / 2, state.canvasSize.height / 2);
+        return;
+      }
+
+      const box = getImageBox();
+      ctx.drawImage(image, box.x, box.y, box.width, box.height);
+
+      if (!state.crop) return;
+      const cropRect = imageToCanvasRect(state.crop);
+
+      ctx.save();
+      ctx.fillStyle = "rgba(17, 24, 39, 0.56)";
+      ctx.beginPath();
+      ctx.rect(box.x, box.y, box.width, box.height);
+      ctx.rect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+      ctx.fill("evenodd");
+      ctx.restore();
+
+      drawGrid(cropRect);
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+      drawHandles(cropRect);
+    };
+
+    const drawGrid = (rect) => {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i <= 2; i += 1) {
+        const x = rect.x + (rect.w / 3) * i;
+        const y = rect.y + (rect.h / 3) * i;
+        ctx.beginPath();
+        ctx.moveTo(x, rect.y);
+        ctx.lineTo(x, rect.y + rect.h);
+        ctx.moveTo(rect.x, y);
+        ctx.lineTo(rect.x + rect.w, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    };
+
+    const handlePoints = (rect) => [
+      ["nw", rect.x, rect.y],
+      ["n", rect.x + rect.w / 2, rect.y],
+      ["ne", rect.x + rect.w, rect.y],
+      ["e", rect.x + rect.w, rect.y + rect.h / 2],
+      ["se", rect.x + rect.w, rect.y + rect.h],
+      ["s", rect.x + rect.w / 2, rect.y + rect.h],
+      ["sw", rect.x, rect.y + rect.h],
+      ["w", rect.x, rect.y + rect.h / 2],
+    ];
+
+    const drawHandles = (rect) => {
+      ctx.save();
+      handlePoints(rect).forEach(([, x, y]) => {
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#111827";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(x - 5, y - 5, 10, 10, 3);
+        ctx.fill();
+        ctx.stroke();
+      });
+      ctx.restore();
+    };
+
+    const hitTest = (clientX, clientY) => {
+      const cropRect = imageToCanvasRect(state.crop);
+      const canvasRect = els.canvas.getBoundingClientRect();
+      if (!cropRect) return "new";
+      const x = clientX - canvasRect.left;
+      const y = clientY - canvasRect.top;
+      for (const [name, hx, hy] of handlePoints(cropRect)) {
+        if (Math.abs(x - hx) <= 11 && Math.abs(y - hy) <= 11) return name;
+      }
+      if (x >= cropRect.x && x <= cropRect.x + cropRect.w && y >= cropRect.y && y <= cropRect.y + cropRect.h) {
+        return "move";
+      }
+      return "new";
+    };
+
+    const clampCrop = (crop, ratio = null) => {
+      const image = currentImage();
+      if (!image) return crop;
+      let { x, y, w, h } = normalizeCrop(crop);
+      const minSize = 24;
+
+      w = Math.max(minSize, Math.min(w, image.naturalWidth));
+      h = Math.max(minSize, Math.min(h, image.naturalHeight));
+
+      if (ratio) {
+        if (w / h > ratio) {
+          w = h * ratio;
+        } else {
+          h = w / ratio;
+        }
+        if (w > image.naturalWidth) {
+          w = image.naturalWidth;
+          h = w / ratio;
+        }
+        if (h > image.naturalHeight) {
+          h = image.naturalHeight;
+          w = h * ratio;
+        }
+      }
+
+      x = Math.max(0, Math.min(x, image.naturalWidth - w));
+      y = Math.max(0, Math.min(y, image.naturalHeight - h));
+      return { x, y, w, h };
+    };
+
+    const normalizeCrop = (crop) => {
+      let { x, y, w, h } = crop;
+      if (w < 0) {
+        x += w;
+        w = Math.abs(w);
+      }
+      if (h < 0) {
+        y += h;
+        h = Math.abs(h);
+      }
+      return { x, y, w, h };
+    };
+
+    const createCropFromPoints = (start, end) => {
+      if (!state.ratio) {
+        return clampCrop({ x: start.x, y: start.y, w: end.x - start.x, h: end.y - start.y });
+      }
+      const directionX = end.x >= start.x ? 1 : -1;
+      const directionY = end.y >= start.y ? 1 : -1;
+      let width = Math.abs(end.x - start.x);
+      let height = Math.abs(end.y - start.y);
+      if (width / Math.max(1, height) > state.ratio) {
+        height = width / state.ratio;
+      } else {
+        width = height * state.ratio;
+      }
+      return clampCrop({
+        x: start.x + (directionX < 0 ? -width : 0),
+        y: start.y + (directionY < 0 ? -height : 0),
+        w: width,
+        h: height,
+      }, state.ratio);
+    };
+
+    const resizeCrop = (mode, startCrop, pointer) => {
+      let left = startCrop.x;
+      let right = startCrop.x + startCrop.w;
+      let top = startCrop.y;
+      let bottom = startCrop.y + startCrop.h;
+
+      if (mode.includes("w")) left = pointer.x;
+      if (mode.includes("e")) right = pointer.x;
+      if (mode.includes("n")) top = pointer.y;
+      if (mode.includes("s")) bottom = pointer.y;
+
+      let crop = normalizeCrop({ x: left, y: top, w: right - left, h: bottom - top });
+
+      if (state.ratio) {
+        const center = {
+          x: startCrop.x + startCrop.w / 2,
+          y: startCrop.y + startCrop.h / 2,
+        };
+        if (mode === "n" || mode === "s") {
+          crop.w = crop.h * state.ratio;
+          crop.x = center.x - crop.w / 2;
+        } else if (mode === "e" || mode === "w") {
+          crop.h = crop.w / state.ratio;
+          crop.y = center.y - crop.h / 2;
+        } else {
+          crop.h = crop.w / state.ratio;
+          if (mode.includes("n")) crop.y = bottom - crop.h;
+          if (mode.includes("w")) crop.x = right - crop.w;
+        }
+      }
+
+      return clampCrop(crop, state.ratio);
+    };
+
+    const onPointerDown = (event) => {
+      if (!currentImage()) return;
+      const point = canvasPointToImage(event.clientX, event.clientY);
+      if (!point) return;
+      const mode = hitTest(event.clientX, event.clientY);
+      state.drag = {
+        mode,
+        startPoint: point,
+        startCrop: state.crop ? { ...state.crop } : null,
+      };
+      if (mode === "new") {
+        state.crop = { x: point.x, y: point.y, w: 1, h: 1 };
+      }
+      els.canvas.setPointerCapture(event.pointerId);
+      draw();
+    };
+
+    const onPointerMove = (event) => {
+      if (!state.drag || !currentImage()) return;
+      const point = canvasPointToImage(event.clientX, event.clientY);
+      if (!point) return;
+      const { mode, startPoint, startCrop } = state.drag;
+
+      if (mode === "move" && startCrop) {
+        const image = currentImage();
+        const next = {
+          ...startCrop,
+          x: Math.max(0, Math.min(image.naturalWidth - startCrop.w, startCrop.x + point.x - startPoint.x)),
+          y: Math.max(0, Math.min(image.naturalHeight - startCrop.h, startCrop.y + point.y - startPoint.y)),
+        };
+        state.crop = next;
+      } else if (mode === "new") {
+        state.crop = createCropFromPoints(startPoint, point);
+      } else if (startCrop) {
+        state.crop = resizeCrop(mode, startCrop, point);
+      }
+
+      draw();
+      queuePreview();
+      renderStats();
+    };
+
+    const onPointerUp = (event) => {
+      if (!state.drag) return;
+      state.drag = null;
+      els.canvas.releasePointerCapture(event.pointerId);
+      draw();
+      queuePreview();
+    };
+
+    const getCroppedBlob = () => new Promise((resolve) => {
+      const image = currentImage();
+      if (!image || !state.crop) {
+        resolve(null);
+        return;
+      }
+      const crop = clampCrop(state.crop, state.ratio);
+      const out = document.createElement("canvas");
+      out.width = Math.max(1, Math.round(crop.w));
+      out.height = Math.max(1, Math.round(crop.h));
+      const outCtx = out.getContext("2d");
+      if (els.formatSelect.value === "image/jpeg") {
+        outCtx.fillStyle = "#ffffff";
+        outCtx.fillRect(0, 0, out.width, out.height);
+      }
+      outCtx.drawImage(image, crop.x, crop.y, crop.w, crop.h, 0, 0, out.width, out.height);
+      out.toBlob(resolve, els.formatSelect.value, Number(els.qualityRange.value) / 100);
+    });
+
+    const queuePreview = () => {
+      clearTimeout(state.previewTimer);
+      state.previewTimer = setTimeout(updatePreview, 120);
+    };
+
+    const updatePreview = async () => {
+      const blob = await getCroppedBlob();
+      if (!blob) {
+        els.previewImage.classList.add("hidden");
+        els.previewEmpty.classList.remove("hidden");
+        return;
+      }
+      if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+      state.previewUrl = URL.createObjectURL(blob);
+      els.previewImage.src = state.previewUrl;
+      els.previewImage.classList.remove("hidden");
+      els.previewEmpty.classList.add("hidden");
+    };
+
+    const downloadCrop = async () => {
+      const blob = await getCroppedBlob();
+      const item = currentItem();
+      if (!blob || !item) return;
+      const extension = els.formatSelect.value === "image/jpeg" ? "jpg" : "png";
+      const cleanName = item.name.replace(/\.[^.]+$/, "");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${cleanName}_cropped.${extension}`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 800);
+      setStatus("크롭 이미지를 다운로드했습니다.", "success");
+    };
+
+    const renderList = () => {
+      els.imageCount.textContent = state.images.length;
+      els.imageList.innerHTML = state.images.map((item) => `
+        <div class="source-item ${item.id === state.currentId ? "active" : ""}" data-image-id="${item.id}">
+          <div class="source-name">${escapeHtml(item.name)}</div>
+          <div class="source-meta">${item.image.naturalWidth} × ${item.image.naturalHeight}px</div>
+        </div>
+      `).join("");
+      els.imageList.querySelectorAll("[data-image-id]").forEach((item) => {
+        item.addEventListener("click", () => selectImage(item.dataset.imageId));
+      });
+    };
+
+    const renderStats = () => {
+      const image = currentImage();
+      const hasImage = Boolean(image && state.crop);
+      els.sourceSize.textContent = image ? `${image.naturalWidth} × ${image.naturalHeight}px` : "-";
+      els.outputSize.textContent = state.crop ? `${Math.round(state.crop.w)} × ${Math.round(state.crop.h)}px` : "-";
+      els.ratioValue.textContent = ratioLabel();
+      els.qualityBadge.textContent = els.qualityRange.value;
+      [els.downloadTop, els.downloadStrip, els.downloadSide, els.resetCrop].forEach((button) => {
+        button.disabled = !hasImage;
+      });
+      els.ratioButtons.querySelectorAll(".segment").forEach((button) => {
+        const value = button.dataset.ratio ? Number(button.dataset.ratio) : null;
+        button.classList.toggle("active", value === state.ratio || (!value && !state.ratio));
+      });
+    };
+
+    const render = () => {
+      renderList();
+      renderStats();
+    };
+
+    const escapeHtml = (value) => String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+    els.input.addEventListener("change", (event) => loadFiles(event.target.files));
+    els.dropZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      els.dropZone.classList.add("dragging");
+    });
+    els.dropZone.addEventListener("dragleave", () => els.dropZone.classList.remove("dragging"));
+    els.dropZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      els.dropZone.classList.remove("dragging");
+      loadFiles(event.dataTransfer.files);
+    });
+    els.ratioButtons.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-ratio]");
+      if (button) setRatio(button.dataset.ratio);
+    });
+    els.resetCrop.addEventListener("click", () => {
+      resetCropToRatio();
+      draw();
+      queuePreview();
+      render();
+    });
+    [els.downloadTop, els.downloadStrip, els.downloadSide].forEach((button) => button.addEventListener("click", downloadCrop));
+    els.formatSelect.addEventListener("change", queuePreview);
+    els.qualityRange.addEventListener("input", () => {
+      renderStats();
+      queuePreview();
+    });
+    els.canvas.addEventListener("pointerdown", onPointerDown);
+    els.canvas.addEventListener("pointermove", onPointerMove);
+    els.canvas.addEventListener("pointerup", onPointerUp);
+    els.canvas.addEventListener("pointercancel", onPointerUp);
+
+    const resizeObserver = new ResizeObserver(resizeCanvas);
+    resizeObserver.observe(els.canvas);
+    window.addEventListener("resize", resizeCanvas);
+
+    resizeCanvas();
+    render();
+  </script>
+</body>
+</html>
